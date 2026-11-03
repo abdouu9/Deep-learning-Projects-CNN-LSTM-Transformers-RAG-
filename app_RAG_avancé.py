@@ -1,12 +1,6 @@
 # *****************************************************************************
 # But : Amélioration d'un RAG classique vers un RAG avancé
-# Auteur : Étudiant
-# Base fournie par : Prof. OUHMIDA Asmae
-#
-# T.A.F :
-# 1) Comprendre le RAG classique
-# 2) Implémenter une amélioration (Query Expansion + Reranking)
-# 3) Comparer RAG classique vs RAG amélioré
+# Relaise par : Abdelkader Arras
 # *****************************************************************************
 
 import streamlit as st
@@ -30,7 +24,7 @@ if "llm" not in st.session_state:
     st.session_state.llm = Ollama(model="llama3.2")
 
 
-# ---------------------- TODO 1 : QUERY EXPANSION ----------------------
+
 def expand_query(query, llm):
     """
     FIXED: Now uses LLM to generate query variations instead of calling itself.
@@ -80,18 +74,16 @@ Return ONLY the questions, one per line, without numbering or explanation.
 # ---------------------- TODO 2 : RERANKING ----------------------
 def rerank_chunks(query, docs, llm, top_k=5):
     """
-    FIXED: Now uses LLM to score documents instead of calling itself.
-
     How it works:
     1. Ask LLM to rate each document's relevance (0-10)
     2. Sort by score
     3. Return top_k most relevant documents
-    """
+  """  
     scored_docs = []
 
     for doc in docs:
         # Ask LLM to score this document
-        scoring_prompt = f"""
+        scoring_prompt = f
 Rate the relevance of this document to the question on a scale of 0-10.
 Respond with ONLY a number between 0 and 10.
 
@@ -100,7 +92,7 @@ Question: {query}
 Document:
 {doc.page_content[:500]}...
 
-Relevance score (0-10):"""
+Relevance score (0-10):
 
         try:
             score_str = llm(scoring_prompt).strip()
@@ -118,7 +110,6 @@ Relevance score (0-10):"""
     return [doc for score, doc in scored_docs[:top_k]]
 
 
-# ---------------------- PDF PROCESSING ----------------------
 if uploaded_file is not None:
     with st.spinner("Processing PDF..."):
         with open(uploaded_file.name, "wb") as f:
@@ -138,17 +129,16 @@ if uploaded_file is not None:
 
         st.success("PDF processed successfully!")
 
-# ---------------------- QUESTION / ANSWER ----------------------
 query = st.chat_input("Ask a question about the PDF:")
 
 if query and st.session_state.db:
     with st.spinner("Generating answer..."):
         # OPTION 1: Classic RAG (no expansion, no reranking)
-        # retriever = st.session_state.db.as_retriever(search_kwargs={"k": 5})
-        # selected_docs = retriever.get_relevant_documents(query)
+         retriever = st.session_state.db.as_retriever(search_kwargs={"k": 5})
+         selected_docs = retriever.get_relevant_documents(query)
 
         # OPTION 2: Advanced RAG (with expansion + reranking)
-        # Step 1: Expand query to get more documents
+         Step 1: Expand query to get more documents
         expanded_docs = expand_query(query, st.session_state.llm)
 
         # Step 2: Rerank to get best documents
@@ -158,22 +148,4 @@ if query and st.session_state.db:
         context = "\n\n".join([doc.page_content for doc in selected_docs])
 
         prompt = f"""
-You must answer ONLY using the context below.
-If the answer is not in the context, say:
-"I don't know based on the provided document."
 
-Context:
-{context}
-
-Question:
-{query}
-"""
-
-        answer = st.session_state.llm(prompt)
-
-        st.write("### Answer")
-        st.write(answer)
-
-        st.write("### Sources")
-        for doc in selected_docs:
-            st.write(f"- {doc.metadata['source']} (page {doc.metadata.get('page', '?')})")
