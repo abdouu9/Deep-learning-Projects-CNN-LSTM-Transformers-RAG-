@@ -1,6 +1,6 @@
 # *****************************************************************************
 # But : Amélioration d'un RAG classique vers un RAG avancé
-# Relaise par : Abdelkader Arras
+# Realise par : Abdelkader Arras
 # *****************************************************************************
 
 import streamlit as st
